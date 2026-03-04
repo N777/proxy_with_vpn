@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  openvpn:
+    image: dperson/openvpn-client
+    container_name: openvpn-client
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    volumes:
+      - ./openvpn:/vpn
+    ports:
+      - '3128:3128/tcp'
+      - '1080:1080/tcp'
+    environment:
+      - OPENVPN_CONFIG=client
+    restart: unless-stopped
+
+  3proxy:
+    image: ghcr.io/tarampampam/3proxy:1
+    network_mode: "service:openvpn"
+    depends_on:
+      - openvpn
+    environment:
+      MAX_CONNECTIONS: 10000
+      PROXY_PORT: 3128
+      SOCKS_PORT: 1080
+      PRIMARY_RESOLVER: 77.88.8.8
+      SECONDARY_RESOLVER: 8.8.8.8
+
